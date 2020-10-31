@@ -27,3 +27,6 @@ hs_err_pid*
 /OcrParser/target/
 /Api/target/
 /Core/target/
+/classifier/res/
+/classifier/bad/
+/classifier/__pycache__/
