@@ -1,6 +1,5 @@
 package org.innoagencyhack.ocrparser.mongo;
 
-import org.innoagencyhack.core.FileInfoModel;
 import com.mongodb.BasicDBObject;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -38,6 +37,10 @@ public class RawTextRepository implements AutoCloseable {
         mongoClient = MongoClients.create(clientSettings);
         MongoDatabase db = mongoClient.getDatabase("innoagencyhack");
         fileInfos = db.getCollection("files", FileInfoModel.class);
+    }
+
+    public FileInfoModel find(String id) {
+        return fileInfos.find(new BasicDBObject("_id", id)).first();
     }
 
     public void upsert(FileInfoModel info) {

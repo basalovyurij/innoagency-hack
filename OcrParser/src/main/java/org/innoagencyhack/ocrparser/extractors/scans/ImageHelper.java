@@ -28,6 +28,31 @@ public class ImageHelper {
     private static final double ALPHA = 0.5;
     private static final double BETA = 1.0 - ALPHA;
     
+    public static boolean hasNoise(Mat img) {
+        // Creating an empty matrix to store the result
+        Mat dst = new Mat();
+        // Applying GaussianBlur on the Image
+        Imgproc.Laplacian(img, dst, 10);
+
+        long countBadPixels = (long)Core.sumElems(dst).val[0];
+        double s_perc = (double) countBadPixels / img.width() / img.height();
+        
+        return s_perc > 20;
+    }
+    
+    public static Mat removeNoice(Mat img) {
+        Mat currImg = img.clone();
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        Imgproc.morphologyEx(currImg, currImg, Imgproc.MORPH_CLOSE, kernel);
+        Imgproc.GaussianBlur(currImg, currImg, new Size(new Point(5, 5)), 0);
+        Imgproc.morphologyEx(currImg, currImg, Imgproc.MORPH_CLOSE, kernel);
+        Imgproc.GaussianBlur(currImg, currImg, new Size(new Point(5, 5)), 0);
+        
+        Mat normalized = new Mat();
+        Core.normalize(currImg, normalized, 0, 255, Core.NORM_MINMAX);
+        return getTresholdImage(normalized);    
+    }
+    
     public static Mat bufferedImageToMat(BufferedImage bi) throws Exception {
         try(ByteArrayOutputStream bis = new ByteArrayOutputStream()) {
             ImageIO.write(bi, "png", bis);
@@ -55,11 +80,15 @@ public class ImageHelper {
     public static List<Mat> getTextRegions(Mat image) throws Exception {
         int fontSize = fontHeight(image);
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(fontSize * 0.4, fontSize * 0.7));
+        Mat tmp = new Mat();
+        Core.normalize(image, tmp, 0, 255, Core.NORM_MINMAX);
+        Imgproc.GaussianBlur(tmp, tmp, new Size(new Point(15, 15)), 0);
         Mat erode = new Mat();
-        Imgproc.erode(image, erode, kernel, new Point(-1,-1), 2);
+        Imgproc.erode(tmp, erode, kernel, new Point(-1,-1), 2);
         
         Mat tresh_img = getTresholdImage(erode);
-        
+        // ImageIO.write(mat2BufferedImage(tresh_img), "jpg", new java.io.File(new java.util.Date().getTime() + ".jpg"));
+                
         ArrayList<MatOfPoint> contours = getContours(tresh_img);
         List<Mat> res = new ArrayList<>();
         List<Rect> rectList = new ArrayList<>();
@@ -147,6 +176,7 @@ public class ImageHelper {
     public static boolean checkSize(Mat image, Rect rect){
         return !(image.size().height == rect.height | image.size().width == rect.width);
     }
+    
     public static Mat getTresholdImage(Mat image) {
         Mat threshImg = new Mat();
         Imgproc.threshold(image, threshImg, THRESH, MAX_VAL, TRESH_TYPE);
@@ -220,7 +250,7 @@ public class ImageHelper {
     }
     
     private static int fontHeight(Mat image) {
-        return (int)(image.size().height / 80.0);
+        return (int)(image.size().height / 100.0);
     }
 
     public static boolean isBlank(Mat image) {
