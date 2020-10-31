@@ -11,8 +11,8 @@ import org.innoagencyhack.ocrparser.extractors.ImgParser;
 import org.innoagencyhack.ocrparser.extractors.PdfParser;
 import org.innoagencyhack.ocrparser.models.ParseRequest;
 import org.innoagencyhack.ocrparser.models.ParseResponse;
-import org.innoagencyhack.ocrparser.mongo.FileInfoModel;
-import org.innoagencyhack.ocrparser.mongo.MongoRepository;
+import org.innoagencyhack.core.FileInfoModel;
+import org.innoagencyhack.ocrparser.mongo.RawTextRepository;
 
 /**
  *
@@ -22,10 +22,10 @@ public class FileParser implements AutoCloseable {
     
     private static final Logger logger = LogManager.getLogger(FileParser.class);
     
-    private final MongoRepository repo;
+    private final RawTextRepository repo;
 
     public FileParser() {
-        this.repo = new MongoRepository();
+        this.repo = new RawTextRepository();
     }    
     
     public void run() throws IOException {
